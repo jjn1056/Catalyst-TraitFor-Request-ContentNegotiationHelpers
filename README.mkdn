@@ -1,6 +1,6 @@
 # NAME
 
-Catalyst::Model::HTMLFormhandler - Proxy a directory of HTML::Formhandler forms
+Catalyst::TraitFor::Request::ContentNegotiationHelpers - assistance with content negotiation
 
 # SYNOPSIS
 
@@ -35,6 +35,16 @@ In a controller:
       my $best_media_type = $c->req->choose_media_type('application/json', 'text/html');
     }
 
+    sub choose :Local {
+      my ($self, $c) = @_;
+      my $body = $c->req->on_best_media_type(
+        'no_match' => sub { 'none' },
+        'text/html' => sub { 'html' },
+        'application/json' => sub { 'json' });
+
+      $c->res->body($body);
+    }
+
 # DESCRIPTION
 
 When using [Catalyst](https://metacpan.org/pod/Catalyst) and developing web APIs it can be desirable to examine
@@ -62,22 +72,73 @@ This role defines the following methods:
 ## choose\_media\_type (@array\_of\_types)
 
 Given an array of possible media types ('application/json', 'text/html', etc.)
-return the one that is the best match for the current request.
+return the one that is the best match for the current request (by looking at the
+current request ACCEPT header, parsing it and comparing).
+
+## accepts\_media\_type ($type)
+
+Given a string type that is a media type (text/html, application/json) returns true
+if that type is acceptable to the requesting client.
+
+## on\_best\_media\_type (%callbacks)
+
+Given a hash where the keys are media types and the values are coderefs, execute
+and return the value of the coderef whose key is the best match for that media type
+(based on the result of ["choose\_media\_type"](#choose_media_type).  For example:
+
+    my $body = $c->req->on_best_media_type(
+      'no_match' => sub { 'none' },
+      'text/html' => sub { 'html' },
+      'application/json' => sub { 'json' });
+
+    $c->res->body($body);
+
+The coderef will receive the current request object as its single argument.
+
+If there are no matches, execute the coderef associated with a 'no\_match' key
+or return undef if no such key exists.
 
 ## choose\_language (@array\_of\_langauges)
 
 Given an array of possible media types ('en-US', 'es', etc.)
 return the one that is the best match for the current request.
 
+## accepts\_language ($type)
+
+Given a string type that is a language string returns true
+if that is acceptable to the requesting client.
+
+## on\_best\_language (%callbacks)
+
+Works like ["on\_best\_media\_type"](#on_best_media_type) but matches language.
+
 ## choose\_charset (@array\_of\_character\_sets)
 
 Given an array of possible media types ("UTF-8", "US-ASCII", etc.)
 return the one that is the best match for the current request.
 
+## accepts\_charset ($type)
+
+Given a string type that is a charset string returns true
+if that is acceptable to the requesting client.
+
+## on\_best\_charset (%callbacks)
+
+Works like ["on\_best\_media\_type"](#on_best_media_type) but matches charset.
+
 ## choose\_encoding (@array\_of\_encodings)
 
 Given an array of possible encodings ("gzip", "identity", etc.)
 return the one that is the best match for the current request.
+
+## accepts\_encoding ($type)
+
+Given a string type that is an encoding string returns true
+if that is acceptable to the requesting client.
+
+## on\_best\_encoding (%callbacks)
+
+Works like ["on\_best\_media\_type"](#on_best_media_type) but matches encoding.
 
 ## raw\_choose\_media\_type
 
@@ -98,7 +159,7 @@ John Napiorkowski [email:jjnapiork@cpan.org](email:jjnapiork@cpan.org)
 
 # SEE ALSO
 
-[Catalyst](https://metacpan.org/pod/Catalyst), [Catalyst::Model](https://metacpan.org/pod/Catalyst::Model), [HTML::Formhandler](https://metacpan.org/pod/HTML::Formhandler), [Module::Pluggable](https://metacpan.org/pod/Module::Pluggable)
+[Catalyst](https://metacpan.org/pod/Catalyst), [Catalyst::Request](https://metacpan.org/pod/Catalyst::Request), [HTTP::Headers::ActionPack::ContentNegotiation](https://metacpan.org/pod/HTTP::Headers::ActionPack::ContentNegotiation)
 
 # COPYRIGHT & LICENSE
 
