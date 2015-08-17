@@ -1,4 +1,9 @@
 # This file documents the revision history for Perl extension Catalyst-TraitFor-Request-ContentNegotiationHelpers.
 
+0.002 - 2015-08-17
+  - added helper methods: accepts_charset, accepts_language, accepts_encoding,
+    accepts_media_type, on_best_encoding, on_best_charset, on_best_language,
+    on_best_media_type.
+
 0.001 - 2015-04-29
   - First Release 

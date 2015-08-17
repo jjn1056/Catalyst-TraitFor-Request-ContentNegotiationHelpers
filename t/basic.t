@@ -17,9 +17,17 @@ BEGIN {
 
   sub choose_media_type :Local {
     my ($self, $c) = @_;
-    $c->res->body('json');
 
     Test::Most::is($c->req->choose_media_type('text/html','application/json'), 'application/json');
+    Test::Most::ok($c->req->accepts_media_type('application/json'));
+    Test::Most::ok(not $c->req->accepts_media_type('text/html'));
+
+    my $body = $c->req->on_best_media_type(
+      'no_match' => sub { 'none' },
+      'text/html' => sub { 'html' },
+      'application/json' => sub { 'json' });
+
+    $c->res->body($body);
   }
 
   $INC{'MyApp/Controller/Root.pm'} = __FILE__;

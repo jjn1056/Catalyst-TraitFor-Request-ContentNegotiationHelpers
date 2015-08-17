@@ -20,9 +20,28 @@ has content_negotiator => (
       ->get_content_negotiator;
   }
 
+my $on_best = sub {
+  my ($self, $method, %callbacks) = @_;
+  my $default = delete $callbacks{no_match};
+  if(my $match = $self->$method(keys %callbacks)) {
+    return $callbacks{$match}->($self);
+  } else {
+    return $default ? $default->($self) : undef;
+  }
+};
+
 sub choose_media_type {
   my $self = shift;
   return $self->raw_choose_media_type(\@_, $self->header('Accept'));
+}
+
+sub accepts_media_type {
+  my $self = shift;
+  return $self->choose_media_type(@_) ? 1:0;
+}
+
+sub on_best_media_type {
+  return shift->$on_best('choose_media_type', @_);
 }
 
 sub choose_language {
@@ -30,9 +49,27 @@ sub choose_language {
   return $self->raw_choose_language(\@_, $self->header('Accept-Language'));
 }
 
+sub accepts_language {
+  my $self = shift;
+  return $self->choose_language(@_) ? 1:0;
+}
+
+sub on_best_language {
+  return shift->$on_best('choose_language', @_);
+}
+
 sub choose_charset {
   my $self = shift;
   return $self->raw_choose_charset(\@_, $self->header('Accept-Charset'));
+}
+
+sub accepts_charset  {
+  my $self = shift;
+  return $self->choose_charset(@_) ? 1:0;
+}
+
+sub on_best_charset {
+  return shift->$on_best('choose_charset', @_);
 }
 
 sub choose_encoding {
@@ -40,11 +77,20 @@ sub choose_encoding {
   return $self->raw_choose_encoding(\@_, $self->header('Accept-Encoding'));
 }
 
+sub accepts_encoding {
+  my $self = shift;
+  return $self->choose_encoding(@_) ? 1:0;
+}
+
+sub on_best_encoding {
+  return shift->$on_best('choose_encoding', @_);
+}
+
 1;
 
 =head1 NAME
 
-Catalyst::Model::HTMLFormhandler - Proxy a directory of HTML::Formhandler forms
+Catalyst::TraitFor::Request::ContentNegotiationHelpers - assistance with content negotiation
 
 =head1 SYNOPSIS
 
@@ -79,6 +125,17 @@ In a controller:
       my $best_media_type = $c->req->choose_media_type('application/json', 'text/html');
     }
 
+    sub choose :Local {
+      my ($self, $c) = @_;
+      my $body = $c->req->on_best_media_type(
+        'no_match' => sub { 'none' },
+        'text/html' => sub { 'html' },
+        'application/json' => sub { 'json' });
+
+      $c->res->body($body);
+    }
+
+
 =head1 DESCRIPTION
 
 When using L<Catalyst> and developing web APIs it can be desirable to examine
@@ -106,22 +163,73 @@ This role defines the following methods:
 =head2 choose_media_type (@array_of_types)
 
 Given an array of possible media types ('application/json', 'text/html', etc.)
-return the one that is the best match for the current request.
+return the one that is the best match for the current request (by looking at the
+current request ACCEPT header, parsing it and comparing).
+
+=head2 accepts_media_type ($type)
+
+Given a string type that is a media type (text/html, application/json) returns true
+if that type is acceptable to the requesting client.
+
+=head2 on_best_media_type (%callbacks)
+
+Given a hash where the keys are media types and the values are coderefs, execute
+and return the value of the coderef whose key is the best match for that media type
+(based on the result of L</choose_media_type>.  For example:
+
+    my $body = $c->req->on_best_media_type(
+      'no_match' => sub { 'none' },
+      'text/html' => sub { 'html' },
+      'application/json' => sub { 'json' });
+
+    $c->res->body($body);
+
+The coderef will receive the current request object as its single argument.
+
+If there are no matches, execute the coderef associated with a 'no_match' key
+or return undef if no such key exists.
 
 =head2 choose_language (@array_of_langauges)
 
 Given an array of possible media types ('en-US', 'es', etc.)
 return the one that is the best match for the current request.
 
+=head2 accepts_language ($type)
+
+Given a string type that is a language string returns true
+if that is acceptable to the requesting client.
+
+=head2 on_best_language (%callbacks)
+
+Works like L</on_best_media_type> but matches language.
+
 =head2 choose_charset (@array_of_character_sets)
 
 Given an array of possible media types ("UTF-8", "US-ASCII", etc.)
 return the one that is the best match for the current request.
 
+=head2 accepts_charset ($type)
+
+Given a string type that is a charset string returns true
+if that is acceptable to the requesting client.
+
+=head2 on_best_charset (%callbacks)
+
+Works like L</on_best_media_type> but matches charset.
+
 =head2 choose_encoding (@array_of_encodings)
 
 Given an array of possible encodings ("gzip", "identity", etc.)
 return the one that is the best match for the current request.
+
+=head2 accepts_encoding ($type)
+
+Given a string type that is an encoding string returns true
+if that is acceptable to the requesting client.
+
+=head2 on_best_encoding (%callbacks)
+
+Works like L</on_best_media_type> but matches encoding.
 
 =head2 raw_choose_media_type
 
@@ -142,7 +250,7 @@ John Napiorkowski L<email:jjnapiork@cpan.org>
   
 =head1 SEE ALSO
  
-L<Catalyst>, L<Catalyst::Model>, L<HTML::Formhandler>, L<Module::Pluggable>
+L<Catalyst>, L<Catalyst::Request>, L<HTTP::Headers::ActionPack::ContentNegotiation>
 
 =head1 COPYRIGHT & LICENSE
  
