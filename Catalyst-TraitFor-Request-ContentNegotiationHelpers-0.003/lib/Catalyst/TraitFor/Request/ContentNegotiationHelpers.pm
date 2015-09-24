@@ -1,7 +1,5 @@
 package Catalyst::TraitFor::Request::ContentNegotiationHelpers;
 
-our $VERSION = '0.004';
-
 use Moose::Role;
 use HTTP::Headers::ActionPack;
 
