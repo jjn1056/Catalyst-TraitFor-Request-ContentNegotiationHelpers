@@ -1,5 +1,9 @@
 # This file documents the revision history for Perl extension Catalyst-TraitFor-Request-ContentNegotiationHelpers.
 
+0.005 - 2015-11-12
+  - 'no_match' callbacks now get a hash of the other possible callbacks
+     to make it easier to set a default or to inspect.
+
 0.004 - 2015-09-24
   - Fixed missing $VERSION information
 

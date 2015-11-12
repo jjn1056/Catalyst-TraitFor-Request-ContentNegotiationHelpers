@@ -1,6 +1,6 @@
 package Catalyst::TraitFor::Request::ContentNegotiationHelpers;
 
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 
 use Moose::Role;
 use HTTP::Headers::ActionPack;
@@ -28,7 +28,7 @@ my $on_best = sub {
   if(my $match = $self->$method(keys %callbacks)) {
     return $callbacks{$match}->($self);
   } else {
-    return $default ? $default->($self) : undef;
+    return $default ? $default->($self, %callbacks) : undef;
   }
 };
 
@@ -208,7 +208,18 @@ and return the value of the coderef whose key is the best match for that media t
 The coderef will receive the current request object as its single argument.
 
 If there are no matches, execute the coderef associated with a 'no_match' key
-or return undef if no such key exists.
+or return undef if no such key exists.  When executing the 'no_match' callback
+(if any) we also pass a hash of the other callbacks, which you might use for
+setting a default response, or to inspect as part of the information required.
+
+    'no_match' => sub {
+      my ($req, %callbacks) = @_;
+      my @allowed = keys %callbacks;
+      ...
+    }
+
+In this case the 'no_match' callback is removed from '%callbacks' passed to prevent
+the possibility of recursion.
 
 =head2 choose_language (@array_of_langauges)
 
