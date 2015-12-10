@@ -1,6 +1,6 @@
 package Catalyst::TraitFor::Request::ContentNegotiationHelpers;
 
-our $VERSION = '0.005';
+our $VERSION = '0.006';
 
 use Moose::Role;
 use HTTP::Headers::ActionPack;
@@ -272,6 +272,17 @@ These are methods that map directly to the underlying L<HTTP::Headers::ActionPac
 object.  The are basicallty the same functionality except they require two arguments
 (an additional one to support the HTTP header string).  You generally won't need them unless
 you need to compare am HTTP header that is not one that is part of the current request.
+
+=head1 Action Roles
+
+The following ActionRoles are part of this distribution and are offered as
+an alternative method for constructing your controllers
+
+=over 4
+
+=item L<Catalyst::ActionRole::ProvidesMedia>
+
+=back
 
 =head1 AUTHOR
  

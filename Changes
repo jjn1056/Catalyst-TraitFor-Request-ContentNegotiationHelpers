@@ -1,5 +1,8 @@
 # This file documents the revision history for Perl extension Catalyst-TraitFor-Request-ContentNegotiationHelpers.
 
+0.006 - 2015-11-30
+  - New ActionRole to delegate media type negotiation across actions
+
 0.005 - 2015-11-12
   - 'no_match' callbacks now get a hash of the other possible callbacks
      to make it easier to set a default or to inspect.

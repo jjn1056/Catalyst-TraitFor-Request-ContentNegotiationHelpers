@@ -32,6 +32,25 @@ BEGIN {
     $c->res->body($body);
   }
 
+    sub myaction :Chained(/) Does('ProvidesMedia') CaptureArgs(0) {
+      my ($self, $c) = @_;
+    }
+      sub myaction_JSON :Action {
+        my ($self, $c) = @_;
+        $c->res->body('json');
+      }
+      sub myaction_HTML :Action {
+        my ($self, $c) = @_;
+        $c->res->body('html');
+      }
+      sub myaction_no_match :Action {
+        my ($self, $c, $matches) = @_;
+        $c->res->body('no_match');
+      }
+
+      sub next_action_in_chain :Chained(myaction) Args(0) {  }
+
+
   $INC{'MyApp/Controller/Root.pm'} = __FILE__;
 
   package MyApp;
@@ -49,6 +68,23 @@ use Catalyst::Test 'MyApp';
   is $res->content, 'json';
 }
 
-ok my ($res, $c) = ctx_request('/root/test');
+{
+  ok my ($res, $c) = ctx_request('/root/test');
+}
+
+{
+  ok my ($res, $c) = ctx_request('/myaction/next_action_in_chain');
+  is $res->content, 'no_match';
+}
+
+{
+  ok my ($res, $c) = ctx_request(GET '/myaction/next_action_in_chain', Accept => 'application/json');
+  is $res->content, 'json';
+}
+
+{
+  ok my ($res, $c) = ctx_request(GET '/myaction/next_action_in_chain', Accept => 'text/html');
+  is $res->content, 'html';
+}
 
 done_testing;
